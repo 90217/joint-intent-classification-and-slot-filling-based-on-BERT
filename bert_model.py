@@ -2,7 +2,10 @@ import tensorflow as tf
 import tensorflow_hub as hub
 import tensorflow.python.keras.backend as K
 
-
+'''
+build a custom layer using Keras, integrating BERT from tf-hub,
+we could also fine tune the BERT model, for example: only subset of pre-trained BERT layers
+'''
 class BertLayer(tf.keras.layers.Layer):
     def __init__(self, n_fine_tune_layer=12, bert_path='https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1', **kwargs):
         self.n_fine_tune_layers = n_fine_tune_layer
@@ -32,6 +35,7 @@ class BertLayer(tf.keras.layers.Layer):
     def call(self, inputs):
         inputs = [K.cast(x, dtype="int32") for x in inputs] #cast the variables to int32 tensor
         input_ids, input_mask, segment_ids, valid_positions = inputs
+        ## we don't feed the valid_position into the model, the valid_position is only used for the slots transform to align to the tokenized input
         bert_inputs = dict(input_ids=input_ids, ## we can use 'convert_tokens_to_ids' function to get the ids from tokens
                            input_mask=input_mask,
                            segment_ids=segment_ids)

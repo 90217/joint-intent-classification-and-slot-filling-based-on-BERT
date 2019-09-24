@@ -12,9 +12,11 @@ class TagsVectorizer:
     def tokenize(self, tags_str_arr):
         return [s.split() for s in tags_str_arr]
 
-    def fit(self, tags_str_arr):
+    def fit(self, train_tags_str_arr, val_tags_str_arr):
+        ## in order to avoid, in valid_dataset, there is tags which not exit in train_dataset. like: ATIS datset
         self.label_encoder = LabelEncoder()
-        data = ["[padding]", "[CLS]", "[SEP]"] + [item for sublist in self.tokenize(tags_str_arr) for item in sublist]
+        data = ["[padding]", "[CLS]", "[SEP]"] + [item for sublist in self.tokenize(train_tags_str_arr) for item in sublist]
+        data = data + [item for sublist in self.tokenize(val_tags_str_arr) for item in sublist]
         ## # data:  ["[padding]", "[CLS]", "[SEP]", all of the real tags]; add the "[padding]", "[CLS]", "[SEP]" for the real tag list
         self.label_encoder.fit(data)
 
@@ -35,7 +37,7 @@ class TagsVectorizer:
         return output
 
     def inverse_transform(self, model_output_3d, valid_position):
-        ## model_output_3d is the prediction output od trained model
+        ## model_output_3d is the predicted slots output of trained model
         seq_length = valid_position.shape[1]
         slots = np.argmax(model_output_3d, axis=-1)
         slots = [self.label_encoder.inverse_transform(y) for y in slots]
@@ -43,7 +45,7 @@ class TagsVectorizer:
         for i in range(len(slots)):
             y = []
             for j in range(seq_length):
-                if valid_position[i][j] == 1:
+                if valid_position[i][j] == 1: ## only valid_positions = 1 have the real slot-tag
                     y.append(str(slots[i][j]))
             output.append(y)
         return output
@@ -55,10 +57,11 @@ class TagsVectorizer:
         pass
 
 if __name__ == '__main__':
-    tags_str_arr = ['O O B-X B-Y', 'O B-Y O']
+    train_tags_str_arr = ['O O B-X B-Y', 'O B-Y O']
+    val_tags_str_arr = ['O O B-X B-Y', 'O B-Y O XXX']
     valid_positions = np.array([[1, 1, 1, 1, 0, 1, 1], [1, 1, 0, 1, 1, 0, 1]])
 
     vectorizer = TagsVectorizer()
-    vectorizer.fit(tags_str_arr)
-    data = vectorizer.transform(tags_str_arr, valid_positions)
-    print(vectorizer.label_encoder.classes_)
+    vectorizer.fit(train_tags_str_arr, val_tags_str_arr)
+    data = vectorizer.transform(train_tags_str_arr, valid_positions)
+    print(data, vectorizer.label_encoder.classes_)

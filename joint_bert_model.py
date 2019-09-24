@@ -8,6 +8,9 @@ import numpy as np
 import os
 import json
 
+'''
+build and compile our model using the BERT layer
+'''
 class JointBertModel(NLUModel):
     def __init__(self, slots_num, intents_num, sess, num_bert_fine_tune_layers=12):
         self.slots_num = slots_num
@@ -75,18 +78,24 @@ class JointBertModel(NLUModel):
 
 
     def prepare_valid_positions(self, in_valid_positions):
-        in_valid_positions = np.expand_dims(in_valid_positions, axis=2)
-        in_valid_positions = np.tile(in_valid_positions, (1,1,self.slots_num))
+        ## the input is 2-D in_valid_position
+        in_valid_positions = np.expand_dims(in_valid_positions, axis=2) ## expand the shape of the array to axis=2
+        ## 3-D in_valid_position
+        in_valid_positions = np.tile(in_valid_positions, (1,1,self.slots_num)) ##
         return in_valid_positions
 
     def predict_slots_intent(self, x, slots_vectorizer, intent_vectorizer, remove_start_end=True):
         valid_positions = x[3]
         x = (x[0], x[1], x[2], self.prepare_valid_positions(valid_positions))
+
         y_slots, y_intent = self.predict(x)
+
+        ### get the real slot-tags using 'inverse_transform' of slots-vectorizer
         slots = slots_vectorizer.inverse_transform(y_slots, valid_positions)
         if remove_start_end: ## remove the first '[CLS]' and the last '[SEP]' tokens.
             slots = np.array([x[1:-1] for x in slots])
 
+        ### get the real intents using 'inverse-transform' of intents-vectorizer
         intents = np.array([intent_vectorizer.inverse_transform([np.argmax(y_intent[i])])[0] for i in range(y_intent.shape[0])])
         return slots, intents
 

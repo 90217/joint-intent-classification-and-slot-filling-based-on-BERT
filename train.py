@@ -41,7 +41,7 @@ val_input_ids, val_input_mask, val_segment_ids, val_valid_positions, val_sequenc
 
 ## vectorize the train_tags_arr and val_tags_arr
 tags_vectorizer = TagsVectorizer()
-tags_vectorizer.fit(train_tags_arr) ## use the train dataset to fit the tagsvectorizer
+tags_vectorizer.fit(train_tags_arr, val_tags_arr) ## use the train dataset to fit the tagsvectorizer
 train_tags = tags_vectorizer.transform(train_tags_arr, train_valid_positions)
 val_tags = tags_vectorizer.transform(val_tags_arr, val_valid_positions)
 slots_num = len(tags_vectorizer.label_encoder.classes_)
@@ -49,8 +49,13 @@ slots_num = len(tags_vectorizer.label_encoder.classes_)
 
 ## encode the intents label, directly by using the LabelEncoder library, which is provided by skeleran
 intents_label_encoder = LabelEncoder()
-## we should use the train dataset to fit the label encoder and then return the encoded labels
-train_intents = intents_label_encoder.fit_transform(train_intents).astype(np.int32) ## fit_transform
+### atis dataset is a little strange, because in val_dataset, there are tags and intents that don't exit in train_dataset
+intents_label_encoder.fit(train_intents + val_intents)
+train_intents = intents_label_encoder.transform(train_intents).astype(np.int32)
+
+# ## we should use the train dataset to fit the label encoder and then return the encoded labels
+# train_intents = intents_label_encoder.fit_transform(train_intents).astype(np.int32) ## fit_transform
+
 val_intents = intents_label_encoder.transform(val_intents).astype(np.int32) ## transform
 intents_num = len(intents_label_encoder.classes_)
 print(intents_num)

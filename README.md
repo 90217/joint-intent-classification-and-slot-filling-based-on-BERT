@@ -3,7 +3,8 @@ BERT for joint intent classification and slot filling
 
 
 About BERT, please read this paper: BERT:   
-https://www.aclweb.org/anthology/N19-1423 (pre-training of deep bidirectional transformer for language understanding);
+https://www.aclweb.org/anthology/N19-1423 (pre-training of deep bidirectional transformer for language understanding);  
+https://github.com/google-research/bert (official Github website about BERT)
 
 About this project, please read this paper:  
 https://arxiv.org/pdf/1902.10909.pdf (BERT for joint intent classification and slot filling)
